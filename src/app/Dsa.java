@@ -10,9 +10,9 @@ class Dsa extends Thread {
     static long time_second = 0;
 
     public static void main(String[] args) throws Exception {
-        String user_input = "Hello";
+        String user_input = "Yash_dave@gmail.com";
         byte[] value = user_input.getBytes();
-        System.out.println("Encrypted Key :" + value);
+        System.out.println("Input Array:" + value);
         KeyPair key = generateKeyPair();
         PrivateKey private_key = key.getPrivate();
         System.out.println("Private key :" + private_key);
