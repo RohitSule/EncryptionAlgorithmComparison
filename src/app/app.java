@@ -1,53 +1,61 @@
 package app;
 
+import java.security.Security;
+import java.util.concurrent.TimeUnit;
+
+import org.bouncycastle.crypto.CryptoServicesRegistrar;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 
-import org.bouncycastle.crypto.*;
 import java.security.*;
-import java.security.SecureRandom;
 
-class app 
+class app extends Thread 
 {
-    public static void main(String[] args) throws Exception {
-        String          input_text = "Hello this text is going to encrypt"; //User input text
-        SecureRandom	random = new SecureRandom(); //Genrating secure random number
-        IvParameterSpec ivSpec = createCtrIvForAES(1, random); 
-        Key             key =   createKeyForAES(256, random); //Genrating a secure key for encryption
-        Cipher          cipher = Cipher.getInstance("AES/CTR/NoPadding", "BC"); //Type of Encrption algorthim 
-        cipher.init(Cipher.ENCRYPT_MODE, ivSpec); 
-
-    }       
-    public static SecretKey createKeyForAES(int bitLength,SecureRandom random) throws NoSuchAlgorithmException, NoSuchProviderException
+    int counter = 0;
+    static long time_second = 0;
+    public static void main(String[] args) throws Exception 
     {
-    KeyGenerator generator = KeyGenerator.getInstance("AES", "BC");
-    
-    generator.init(256, random);
-    
-    return generator.generateKey();
+        String user_input = "Hello";
+        byte[] value = user_input.getBytes();
+        System.out.println("Encrypted Key :"+value);
+        SecretKey key = generateKey();
+        byte[][] output = cbcEncrypt(key, value);
+        byte[] plainText = cbcDecrypt(key, output[0], output[1]);
+        System.out.println("Decrypted Key :"+output);
+        String plainTextString = new String(plainText);
+        System.out.println("Plain Text given by user :"+plainTextString);
     }
-    public static IvParameterSpec createCtrIvForAES(int messageNumber,SecureRandom random)
-    {
-        byte[]          ivBytes = new byte[16];
-        
-        // initially randomize
-        
-        random.nextBytes(ivBytes);
-        ivBytes[0] = (byte)(messageNumber >> 24);
-        ivBytes[1] = (byte)(messageNumber >> 16);
-        ivBytes[2] = (byte)(messageNumber >> 8);
-        ivBytes[3] = (byte)(messageNumber >> 0);
-        
-        // set the counter bytes to 1
-        
-        for (int i = 0; i != 7; i++)
-        {
-            ivBytes[8 + i] = 0;
-        }
-        
-        ivBytes[15] = 1;
-        
-        return new IvParameterSpec(ivBytes);
-    } 
 
+    public static byte[][] cbcEncrypt(SecretKey key, byte[] data) throws GeneralSecurityException {
+        Thread u = new app();
+        u.start();
+        Cipher cipher = Cipher.getInstance("Twofish/CBC/PKCS7Padding", "BCFIPS");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return new byte[][] { cipher.getIV(), cipher.doFinal(data) };
+    }
+
+    public static byte[] cbcDecrypt(SecretKey key, byte[] iv, byte[] cipherText) throws GeneralSecurityException {
+        Cipher cipher = Cipher.getInstance("Twofish/CBC/PKCS7Padding", "BCFIPS");
+        cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
+        System.out.println("Execution time in seconds :"+TimeUnit.MILLISECONDS.toHours(time_second));
+        return cipher.doFinal(cipherText);
+    }
+
+    public static SecretKey generateKey() throws GeneralSecurityException {
+        Security.addProvider(new BouncyCastleFipsProvider());
+        CryptoServicesRegistrar.setApprovedOnlyMode(false);
+        KeyGenerator keyGenerator = KeyGenerator.getInstance("Twofish", "BCFIPS");
+        keyGenerator.init(256);
+        return keyGenerator.generateKey();
+    }
+    public void run() 
+    {
+        while (true) 
+        {
+            
+        time_second = counter++;
+        
+        }
+    }
 }
