@@ -10,16 +10,30 @@ class Dsa extends Thread {
     static long time_second = 0;
 
     public static void main(String[] args) throws Exception {
+        /* 
+        * Generating a key-pair out of email to visualize a scenario where email
+        * is used as a authenticity mechanism to validate a request using DSA. 
+        * E.g.: Yash sends a request to Dhananjay's Computer to update the git
+        database hosted on his computer.
+        */
         String user_input = "Yash_dave@gmail.com";
+
+        // Converting to Byte Array for encryption 
         byte[] value = user_input.getBytes();
         System.out.println("Input Array:" + value);
+
+        // Genrating a Public - Private key pair
         KeyPair key = generateKeyPair();
         PrivateKey private_key = key.getPrivate();
         System.out.println("Private key :" + private_key);
+
+        // Genrates a Signatiure by using Private key  
         byte[] sign = generateSignature(private_key, value);
         System.out.println("Signature :" + sign);
         PublicKey public_key = key.getPublic();
         System.out.println("Public key :"+public_key);
+
+        // Verifying the Signature using public key
         Boolean check = verifySignature(public_key, value, sign);
         if (check == true) {
             System.out.println("Verified");
@@ -28,6 +42,8 @@ class Dsa extends Thread {
         }
     }
 
+    // Function for KeyPair Generation, Returns a KeyPair Object which contains
+    // public and private keys 
     public static KeyPair generateKeyPair() throws GeneralSecurityException {
         Security.addProvider(new BouncyCastleFipsProvider());
         KeyPairGenerator keyPair = KeyPairGenerator.getInstance("DSA", "BCFIPS");
@@ -35,6 +51,8 @@ class Dsa extends Thread {
         return keyPair.generateKeyPair();
     }
 
+    // Function for GeneratingSignature, Returns Encrypted Signature  
+    // in Byte Array
     public static byte[] generateSignature(PrivateKey dsaPrivate, byte[] input) throws GeneralSecurityException {
         Thread u = new Dsa();
         u.start();
@@ -44,6 +62,8 @@ class Dsa extends Thread {
         return signature.sign();
     }
 
+    // Function to verifySignature, Returns a Boolean 
+    // To check wheather it is authencticated or not
     public static boolean verifySignature(PublicKey dsaPublic, byte[] input, byte[] encSignature) throws GeneralSecurityException {
         Signature signature = Signature.getInstance("SHA384withDSA", "BCFIPS");
         signature.initVerify(dsaPublic);
@@ -51,7 +71,8 @@ class Dsa extends Thread {
         System.out.println("Execution time in seconds :"+TimeUnit.MILLISECONDS.toHours(time_second));
         return signature.verify(encSignature);
     }
-
+    
+    // Thread run method for calculating time taken for execution in milliseconds
     public void run() {
         while (true) {
 
